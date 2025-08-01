@@ -37,7 +37,7 @@ const IdeasTab = () => {
   const [isGenerating, setIsGenerating] = useState(false);
 
   const platformContentTypes = {
-    LinkedIn: ["Article", "Post", "Newsletter", "Image"],
+    LinkedIn: ["Article", "Text Post", "Newsletter", "Image Post", "Video scripts"],
     Instagram: ["Reels", "Post", "Story", "Image"],
     YouTube: ["Video", "Shorts"],
     Twitter: ["Tweet", "Thread", "Image"],
@@ -87,7 +87,7 @@ const IdeasTab = () => {
   };
 
   // Function to call webhook for specific platform with idea ID
-  const callPlatformWebhook = async (platform: string, ideaId: number) => {
+  const callPlatformWebhook = async (platform: string, ideaId: number, contentType: string) => {
     const webhookUrl = webhookUrls[platform as keyof typeof webhookUrls];
     
     if (!webhookUrl) {
@@ -96,7 +96,7 @@ const IdeasTab = () => {
     }
 
     try {
-      console.log(`Calling ${platform} webhook for idea ID: ${ideaId}`);
+      console.log(`Calling ${platform} webhook for idea ID: ${ideaId}, content type: ${contentType}`);
       
       const response = await fetch(webhookUrl, {
         method: "POST",
@@ -105,7 +105,8 @@ const IdeasTab = () => {
         },
         mode: "no-cors", // Add this to handle CORS issues
         body: JSON.stringify({
-          id: ideaId // Send the idea ID as 'id' field
+        id: ideaId,
+          contentType: contentType // Add content type to the payload
         }),
       });
 
@@ -163,7 +164,7 @@ const IdeasTab = () => {
           // Call webhook for each idea in this platform
           const platformPromises = selections.map(async (selection) => {
             try {
-              await callPlatformWebhook(platform, selection.ideaId);
+              await callPlatformWebhook(platform, selection.ideaId, selection.contentType);
               return { success: true, ideaId: selection.ideaId };
             } catch (error) {
               console.error(`Failed webhook call for ${platform}, idea ${selection.ideaId}:`, error);
@@ -492,7 +493,7 @@ const IdeasTab = () => {
                 <TableHead className="text-white">Status</TableHead>
                 <TableHead className="text-white">Priority</TableHead>
                 <TableHead className="text-white">Created</TableHead>
-                <TableHead className="text-white">Content Types</TableHead>
+                <TableHead className="text-white">Category </TableHead>
                 <TableHead className="text-white">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -522,7 +523,7 @@ const IdeasTab = () => {
                     </span>
                   </TableCell>
                   <TableCell className="text-gray-300">
-                    {idea.priority_score ? (idea.priority_score * 100).toFixed(0) : '50'}%
+                    {idea.priority_score ? Math.round(idea.priority_score) : '50'}
                   </TableCell>
                   <TableCell className="text-gray-300">
                     {formatDate(idea.created_at)}
@@ -635,7 +636,7 @@ const IdeasTab = () => {
                 </div>
                 <div>
                   <Label className="text-white">Priority Score</Label>
-                  <p className="text-gray-300">{viewingIdea.priority_score ? (viewingIdea.priority_score * 100).toFixed(0) : '50'}%</p>
+                  <p className="text-gray-300">{viewingIdea.priority_score ? Math.round(viewingIdea.priority_score) : '5'}/10</p>
                 </div>
                 <div>
                   <Label className="text-white">Content</Label>
